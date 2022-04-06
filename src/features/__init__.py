@@ -3,41 +3,54 @@ from typing import List
 import numpy as np
 import mahotas
 import pywt
+import skimage.feature
 
 import src.data.utils
 
 
+def get_blocks(img: np.ndarray, count: int) -> List[np.ndarray]:
+    M = img.shape[0] // int(np.sqrt(count))
+    N = img.shape[1] // int(np.sqrt(count))
+    blocks = []
+
+    for item in [
+        img[x : x + M, y : y + N]
+        for x in range(0, img.shape[0], M)
+        for y in range(0, img.shape[1], N)
+    ]:
+        blocks.append(item)
+
+    return blocks
+
+
+def calc_and_get_haralick(arr: np.ndarray, axis: int = 0) -> np.array:
+    return mahotas.features.haralick(arr).mean(axis)
+
+
 def haralick_rdwt_features(img: np.ndarray) -> np.array:
-    def calc_and_get_haralick(arr: np.ndarray) -> np.array:
-        return mahotas.features.haralick(arr).mean(axis=0)
+    result_features = []
 
-    def get_blocks(img: np.ndarray, count: int) -> List[np.ndarray]:
-        M = img.shape[0] // int(np.sqrt(count))
-        N = img.shape[1] // int(np.sqrt(count))
-        blocks = []
+    cA, (cH, cV, cD) = pywt.dwt2(img, "haar")
+    img_cont = src.data.utils.resize_img(img.copy(), cA.shape)
+    result_features.append(calc_and_get_haralick(img_cont))
 
-        for item in [
-            img[x : x + M, y : y + N]
-            for x in range(0, img.shape[0], M)
-            for y in range(0, img.shape[1], N)
-        ]:
-            blocks.append(item)
+    for a in [cA, cH, cV, cD]:
+        result_features.append(calc_and_get_haralick(a.astype(np.uint8)))
 
-        return blocks
+    return np.asarray(result_features).ravel()
 
-    count_blocks_for_split = 9
+
+def haralick_rdwt_features_with_blockwise(
+    img: np.ndarray, count_blocks: int = 9
+) -> np.array:
+    count_blocks = 9
 
     result_features = []
-    blocks = get_blocks(img, count_blocks_for_split)
+    blocks = get_blocks(img, count_blocks)
     img_cont = None
 
     for block in blocks:
-        cA, (cH, cV, cD) = pywt.dwt2(block, "haar")
-        img_cont = src.data.utils.resize_img(block.copy(), cA.shape)
-        result_features.append(calc_and_get_haralick(img_cont))
-
-        for i, a in enumerate([cA, cH, cV, cD]):
-            result_features.append(calc_and_get_haralick(a.astype(np.uint8)))
+        result_features.append(haralick_rdwt_features(block))
 
     return np.asarray(result_features).ravel()
 
@@ -84,3 +97,12 @@ def hist_gradient_feauture(img, bins=20, min_val=0, max_val=30) -> np.ndarray:
 def ratio_upper_lower_parts_feature(img) -> np.float64:
     half_index = len(img) // 2
     return np.mean(img[:half_index]) / (np.mean(img[half_index:]) + 1e-5)
+
+
+def lbp_hist_features(
+    img: np.ndarray, radius: int = 2, n_points: int = 16, method: str = "uniform"
+) -> np.array:
+    lbp = skimage.feature.local_binary_pattern(img, n_points, radius, method)
+    n_bins = int(lbp.max() + 1)
+    hist, _ = np.histogram(lbp, density=True, bins=n_bins, range=(0, n_bins))
+    return hist
