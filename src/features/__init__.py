@@ -1,4 +1,8 @@
 from typing import List
+from typing import Union
+from typing import Callable
+from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import mahotas
@@ -6,6 +10,27 @@ import pywt
 import skimage.feature
 
 import src.data.utils
+
+
+def calc_features(
+    channels: Iterable[np.ndarray],
+    feature_funcs: Iterable[Callable],
+    blockwise: Union[None, int] = None,
+) -> np.array:
+    result = np.array([])
+
+    for channel in channels:
+        if blockwise is not None:
+            blocks = get_blocks(channel, blockwise)
+        else:
+            blocks = [channel]
+
+        for block in blocks:
+            for feature_func in feature_funcs:
+                feature_value = np.array(feature_func(block)).ravel()
+                result = np.concatenate((result, feature_value), axis=None)
+
+    return result.ravel()
 
 
 def get_blocks(img: np.ndarray, count: int) -> List[np.ndarray]:
@@ -27,10 +52,10 @@ def calc_and_get_haralick(arr: np.ndarray, axis: int = 0) -> np.array:
     return mahotas.features.haralick(arr).mean(axis)
 
 
-def haralick_rdwt_features(img: np.ndarray) -> np.array:
+def haralick_rdwt_features(img: np.ndarray, wavelet="haar") -> np.array:
     result_features = []
 
-    cA, (cH, cV, cD) = pywt.dwt2(img, "haar")
+    cA, (cH, cV, cD) = pywt.dwt2(img, wavelet)
     img_cont = src.data.utils.resize_img(img.copy(), cA.shape)
     result_features.append(calc_and_get_haralick(img_cont))
 
