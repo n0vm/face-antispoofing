@@ -2,6 +2,7 @@ import os
 import pathlib
 import operator
 from typing import List
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -11,7 +12,7 @@ import src.data.config
 import src.data.utils
 
 
-def read_points_for_transform(filepath: pathlib.Path):
+def read_points_for_transform(filepath: pathlib.Path) -> Tuple[np.array, np.array]:
     with open(filepath) as file:
         points_raw_list = file.read().splitlines()
 
@@ -27,7 +28,7 @@ def perform_projective_transformation(
     image_src: np.ndarray,
     image_dst: np.ndarray,
     transformation_matrix: np.ndarray,
-):
+) -> np.ndarray:
     result = cv2.warpPerspective(
         image_src, transformation_matrix, (image_dst.shape[1], image_dst.shape[0])
     )
@@ -40,7 +41,7 @@ def make_image_transformation(
     filepath_dst: pathlib.Path,
     transformation_matrix: np.ndarray,
     homography_mode=True,
-):
+) -> np.ndarray:
     image_src = cv2.imread(str(filepath_src))
     image_dst = cv2.imread(str(filepath_dst))
     return perform_projective_transformation(
@@ -48,7 +49,9 @@ def make_image_transformation(
     )
 
 
-def get_transformation_matrix(exp_id: str, matrices_dir_path: pathlib.Path):
+def get_transformation_matrix(
+    exp_id: str, matrices_dir_path: pathlib.Path
+) -> Tuple[np.ndarray, str]:
     exp_matrix_file = exp_id + "_matrix.npy"
 
     if not os.path.exists(str(matrices_dir_path / exp_matrix_file)):
@@ -65,7 +68,7 @@ def get_transformation_matrix(exp_id: str, matrices_dir_path: pathlib.Path):
     return result, result_matrix_file
 
 
-def choose_transformation_matrix(exp_id: str, matrices_dir_path: pathlib.Path):
+def choose_transformation_matrix(exp_id: str, matrices_dir_path: pathlib.Path) -> str:
     matrix_files = src.data.utils.get_directory_file_list(matrices_dir_path)
     similarity_of_experiments = {}
     curr_exp_id_cont = None
