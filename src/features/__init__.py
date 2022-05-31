@@ -125,7 +125,7 @@ def ratio_upper_lower_parts_feature(img) -> np.float64:
 
 
 def lbp_hist_features(
-    img: np.ndarray, radius: int = 2, n_points: int = 16, method: str = "uniform"
+    img: np.ndarray, radius: int = 10, n_points: int = 30, method: str = "uniform"
 ) -> np.array:
     lbp = skimage.feature.local_binary_pattern(img, n_points, radius, method)
     n_bins = int(lbp.max() + 1)
