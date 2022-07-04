@@ -6,7 +6,7 @@
 В разработанном алгоритме для обнаружения спуфинга предлагается использовать текстурные признаки ["Статистики пороговой смежности" (от англ. Threshold Adjacency Statistics, TAS)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-110) и классификатор SVM с линейным ядром. Схема разработанного и реализованного алгоритма MC-TAS-SVM (MultiChannel-TAS-SVM) представлена на рисунке ниже.
 
 <p align="center">
-<img alt="image" width="75%" title="Spoofing Examples" src="images/TAS_SVM.png">
+<img alt="image" width="75%" title="MC-TAS-SVM algorithm" src="images/TAS_SVM.png">
 </p>
 
 Также для сравнения были реализованы два других эффективных алгоритма: [RDWT-Haralick-SVM](https://www.researchgate.net/publication/311897496_Face_anti-spoofing_using_Haralick_features) и [LBP-SVM](https://www.researchgate.net/publication/230775873_On_the_Effectiveness_of_Local_Binary_Patterns_in_Face_Anti-spoofing).
